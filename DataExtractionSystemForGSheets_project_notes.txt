@@ -1,0 +1,109 @@
+ETL PROGRAM INTRODUCTION BASED ON THE APACHE AIRFLOW (DOCKER) SYSTEM:
+
+This ETL program, utilizing the Apache Airflow (Docker) system, extracts data sets from the PostgreSQL database using
+query scripts and the API (Hook method), then transforms the obtained data set results for loading. After transforming the
+data, load the results into the PostgreSQL database. Use the Hook method to send the data to Google Sheets via API one by
+one, adhering to the configured schedule.
+
+----------------------------------------------------------------------------------------------------------------------------
+
+WORKFLOW OF THE PROGRAM ALGORITHM:
+
+Prior to extracting data, the program will verify the DAG schema's start_date and execution date based on the scheduling
+configuration set for 2:00 AM West Indonesia Time (WIB) every day, utilizing the "Asia/Jakarta" time zone. The date check
+displays ETL-processed data day by day based on the time elapsed since the start date of the DAG scheme. The function
+"etl_process_check_date" calculates this elapsed time per day.
+
+Retrieving data from specific table entities in a PostgreSQL database, including:
+1. The "artists" table entity.
+2. The "albums" table entity.
+3. The "tracks" table entity.
+
+The data retrieval algorithm is executed in the "etl_sql_data_to_df" function.
+
+After retrieving the dataset, the dirty data undergoes a cleaning process in two stages. These stages involve:
+1. Deleting any data rows containing null values.
+2. Deleting any data rows containing duplicate values.
+
+The TransformData class wraps the "handle_file_content_null_value" and "handle_file_data_row_duplicate" functions,
+performing the data transformation algorithm.
+
+The 'dirty' data cleaning process resulted in a reduction of approximately 93 data points from the data set. Next, each
+dataset will be inserted individually into a Google Sheet file titled "Practice Handson" in sheets "Staging" and
+"Production".
+
+The data transmission algorithm is executed in the "etl_sql_to_gsheet_data" function.
+
+----------------------------------------------------------------------------------------------------------------------------
+
+INSTRUCTIONS TO INITIATE APACHE AIRFLOW FOR THE FIRST TIME:
+
+To initialize Apache Airflow on our local computer via Docker, follow these steps:
+https://airflow.apache.org/docs/apache-airflow/stable/installation/index.html (Apache Airflow's Documentary).
+
+----------------------------------------------------------------------------------------------------------------------------
+
+INSTRUCTIONS ON HOW TO RUN THE PROGRAM:
+
+1. Install library:
+	> pandas~=1.5.3 || (compatible version -> 1.5.3)
+	> numpy~=1.24.3 || (compatible version -> 1.24.3)
+	> pytz~=2022.7 || (compatible version -> 2022.7)
+	> apache-airflow[postgres]
+	> apache-airflow-providers-google
+
+	* You can see it in the file [requirements.txt].
+
+2. * To register the server in the PgAdmin 4 application with the PostgreSQL database based on the docker-compose.yaml
+     script configuration, follow these steps:
+
+	(1) Right-click on 'Servers' and select 'Register' and then select 'Server'.
+
+	(2) In the 'Register-Server' UI, click the 'General' tab:
+		- Fill in the desired value for the 'Name' field.
+
+	(3) Proceed to the 'Connection' tab in the 'Register-Server' UI:
+		- In the 'Host name/address' field, enter 'localhost'.
+
+		- In the 'Port' field, enter the host-port value from the 'ports' keyword in the database configuration
+		  of the docker-compose.yaml script.
+
+		- In the 'Username' field, enter the value from the 'POSTGRES_USER' keyword in the database configuration
+		  of the docker-compose.yaml script.
+
+		- In the 'Password' field, enter the value corresponding to the 'POSTGRES_PASSWORD' keyword in the
+		  docker-compose.yaml script's database configuration.
+
+   * To register the server using the database configuration in the docker-compose.yaml script (PostgreSQL database) in
+     the DBeaver application, follow these steps:
+
+	(1) Click the leftmost blue icon labeled 'New Database Connection', and choose 'PostgreSQL' from the drop-down
+	    menu.
+
+	(2). Click the 'Main' tab in the 'Connect to a Database' user interface (UI) view.
+
+		(2.1). In the 'Server' section:
+			- Select the 'Host' option to set a user-defined value for the 'Host' field, use the 'ports'
+			  keyword for the 'Port' field, and set a user-defined value for the 'Database' field.
+
+			- Fill in 'localhost' as the value for the 'Host' field.
+
+			- In the 'Port' field, enter the host-port value from the 'ports' keyword in the
+			  docker-compose.yaml script's database configuration.
+
+			- For the 'Database' field, input any free value.
+
+		(2.2) In the 'Authentication' section,
+			- Choose 'Database Native' to assign the 'POSTGRES_USER' keyword value to the 'Username' field and
+			  the 'POSTGRES_PASSWORD' keyword value to the 'Password' field.
+
+			- Enter the assigned value of 'POSTGRES_USER' from the database configuration in the
+			  docker-compose.yaml file into the 'Username' field.
+
+			- In the 'Password' field, enter the value corresponding to the 'POSTGRES_PASSWORD' keyword in the
+			  database configuration of the docker-compose.yaml script.
+
+	* After the server registration is successful, a database storing information about Apache Airflow's DAG schema,
+	  tasks, and related details will be stored on the server. The name of the database will align with the value of
+	  the 'POSTGRES_DB' keyword in the database configuration present in the docker-compose.yaml script.
+
